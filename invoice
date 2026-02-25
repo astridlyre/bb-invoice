@@ -27,7 +27,7 @@
                  :default "./output"}
    :pdf         {:desc "Also generate PDF via headless Chrome"
                  :coerce :boolean}
-   :hledger     {:desc "Append hledger journal entry to this file"}
+   :hledger     {:desc "Output hledger journal entry to file (or - for stdout)"}
    :currency    {:desc "Currency symbol (default: $)"
                  :default "$"}
    :help        {:desc "Show help"
@@ -140,9 +140,11 @@
          "    assets:receivable    " amount-str "\n"
          "    revenue:services\n")))
 
-(defn append-hledger [file entry]
-  (spit file entry :append true)
-  (println "hledger entry appended to:" file))
+(defn output-hledger [dest entry]
+  (if (or (= dest "-") (= dest true))
+    (print entry)
+    (do (spit dest entry :append true)
+        (println "hledger entry appended to:" dest))))
 
 ;; --- Main ---
 
@@ -203,6 +205,6 @@
                                                  :invoice-number invoice-number
                                                  :currency       currency
                                                  :total          total})]
-          (append-hledger (:hledger opts) entry))))))
+          (output-hledger (:hledger opts) entry))))))
 
 (-main *command-line-args*)

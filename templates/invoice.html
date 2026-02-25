@@ -4,35 +4,172 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Invoice {{invoice-number}}</title>
+
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; line-height: 1.5; padding: 40px; max-width: 800px; margin: 0 auto; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 3px solid #2c3e50; padding-bottom: 20px; }
-  .header h1 { font-size: 28px; color: #2c3e50; text-transform: uppercase; letter-spacing: 2px; }
-  .invoice-meta { text-align: right; }
-  .invoice-meta p { margin: 2px 0; font-size: 14px; }
-  .invoice-meta .invoice-number { font-size: 16px; font-weight: bold; color: #2c3e50; }
-  .parties { display: flex; justify-content: space-between; margin-bottom: 40px; }
-  .party { width: 45%; }
-  .party h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 8px; }
-  .party p { font-size: 14px; margin: 2px 0; }
-  .party .name { font-weight: bold; font-size: 15px; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-  thead th { background: #2c3e50; color: #fff; padding: 10px 15px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 400;
+    color: #1a1a1a;
+    line-height: 1.6;
+    padding: 60px;
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 14px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 56px;
+  }
+
+  .header h1 {
+    font-size: 32px;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: -0.5px;
+  }
+
+  .invoice-meta {
+    text-align: right;
+  }
+
+  .invoice-meta .invoice-number {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+
+  .invoice-meta .dates {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 300;
+  }
+
+  .invoice-meta .dates span {
+    display: block;
+    line-height: 1.8;
+  }
+
+  .parties {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    gap: 40px;
+  }
+
+  .party { flex: 1; }
+
+  .party h3 {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #9ca3af;
+    margin-bottom: 10px;
+  }
+
+  .party p {
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.7;
+  }
+
+  .party .name {
+    font-weight: 500;
+    font-size: 14px;
+    color: #1a1a1a;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 32px;
+  }
+
+  thead th {
+    padding: 12px 0;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #9ca3af;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
   thead th.num { text-align: right; }
-  tbody td { padding: 10px 15px; border-bottom: 1px solid #eee; font-size: 14px; }
-  tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
-  tbody tr:hover { background: #f8f9fa; }
-  .total-row { display: flex; justify-content: flex-end; margin-bottom: 40px; }
-  .total-box { background: #2c3e50; color: #fff; padding: 15px 30px; text-align: right; }
-  .total-box .label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-  .total-box .amount { font-size: 24px; font-weight: bold; }
-  .bank-details { border-top: 1px solid #eee; padding-top: 20px; }
-  .bank-details h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 8px; }
-  .bank-details p { font-size: 13px; margin: 2px 0; }
+
+  tbody td {
+    padding: 14px 0;
+    font-size: 14px;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  tbody td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .total-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 56px;
+    padding-top: 8px;
+  }
+
+  .total-box {
+    text-align: right;
+  }
+
+  .total-box .label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #9ca3af;
+    margin-bottom: 4px;
+  }
+
+  .total-box .amount {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: -0.5px;
+  }
+
+  .bank-details {
+    border-top: 2px solid #e5e7eb;
+    padding-top: 24px;
+  }
+
+  .bank-details h3 {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #9ca3af;
+    margin-bottom: 10px;
+  }
+
+  .bank-details p {
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.8;
+  }
+
+  .bank-details strong {
+    font-weight: 500;
+    color: #374151;
+  }
+
   @media print {
-    body { padding: 20px; }
-    tbody tr:hover { background: none; }
+    body { padding: 40px; }
   }
 </style>
 </head>
@@ -42,8 +179,10 @@
   <h1>Invoice</h1>
   <div class="invoice-meta">
     <p class="invoice-number">{{invoice-number}}</p>
-    <p>Date: {{date}}</p>
-    <p>Due: {{due-date}}</p>
+    <div class="dates">
+      <span>Issued {{date}}</span>
+      <span>Due {{due-date}}</span>
+    </div>
   </div>
 </div>
 
@@ -75,7 +214,7 @@
   <thead>
     <tr>
       <th>Description</th>
-      <th class="num">Quantity</th>
+      <th class="num">Qty</th>
       <th class="num">Rate</th>
       <th class="num">Amount</th>
     </tr>
