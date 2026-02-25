@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice {{invoice-number}}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; line-height: 1.5; padding: 40px; max-width: 800px; margin: 0 auto; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 3px solid #2c3e50; padding-bottom: 20px; }
+  .header h1 { font-size: 28px; color: #2c3e50; text-transform: uppercase; letter-spacing: 2px; }
+  .invoice-meta { text-align: right; }
+  .invoice-meta p { margin: 2px 0; font-size: 14px; }
+  .invoice-meta .invoice-number { font-size: 16px; font-weight: bold; color: #2c3e50; }
+  .parties { display: flex; justify-content: space-between; margin-bottom: 40px; }
+  .party { width: 45%; }
+  .party h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 8px; }
+  .party p { font-size: 14px; margin: 2px 0; }
+  .party .name { font-weight: bold; font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+  thead th { background: #2c3e50; color: #fff; padding: 10px 15px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  thead th.num { text-align: right; }
+  tbody td { padding: 10px 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+  tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr:hover { background: #f8f9fa; }
+  .total-row { display: flex; justify-content: flex-end; margin-bottom: 40px; }
+  .total-box { background: #2c3e50; color: #fff; padding: 15px 30px; text-align: right; }
+  .total-box .label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .total-box .amount { font-size: 24px; font-weight: bold; }
+  .bank-details { border-top: 1px solid #eee; padding-top: 20px; }
+  .bank-details h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 8px; }
+  .bank-details p { font-size: 13px; margin: 2px 0; }
+  @media print {
+    body { padding: 20px; }
+    tbody tr:hover { background: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Invoice</h1>
+  <div class="invoice-meta">
+    <p class="invoice-number">{{invoice-number}}</p>
+    <p>Date: {{date}}</p>
+    <p>Due: {{due-date}}</p>
+  </div>
+</div>
+
+<div class="parties">
+  <div class="party">
+    <h3>From</h3>
+    <p class="name">{{sender.name}}</p>
+    {% if sender.company %}<p>{{sender.company}}</p>{% endif %}
+    {% if sender.address.street %}<p>{{sender.address.street}}</p>{% endif %}
+    {% if sender.address.city %}<p>{{sender.address.city}}{% if sender.address.state %}, {{sender.address.state}}{% endif %} {{sender.address.zip}}</p>{% endif %}
+    {% if sender.address.country %}<p>{{sender.address.country}}</p>{% endif %}
+    {% if sender.email %}<p>{{sender.email}}</p>{% endif %}
+    {% if sender.phone %}<p>{{sender.phone}}</p>{% endif %}
+  </div>
+  <div class="party">
+    <h3>Bill To</h3>
+    <p class="name">{{client.name}}</p>
+    {% if client.company %}<p>{{client.company}}</p>{% endif %}
+    {% if client.address.street %}<p>{{client.address.street}}</p>{% endif %}
+    {% if client.address.city %}<p>{{client.address.city}}{% if client.address.state %}, {{client.address.state}}{% endif %} {{client.address.zip}}</p>{% endif %}
+    {% if client.address.country %}<p>{{client.address.country}}</p>{% endif %}
+    {% if client.address %}<p>{{client.address}}</p>{% endif %}
+    {% if client.email %}<p>{{client.email}}</p>{% endif %}
+    {% if client.phone %}<p>{{client.phone}}</p>{% endif %}
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th class="num">Quantity</th>
+      <th class="num">Rate</th>
+      <th class="num">Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in services %}
+    <tr>
+      <td>{{item.description}}</td>
+      <td class="num">{{item.quantity}}</td>
+      <td class="num">{{currency}}{{item.amount}}</td>
+      <td class="num">{{currency}}{{item.line-total}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="total-row">
+  <div class="total-box">
+    <div class="label">Total Due</div>
+    <div class="amount">{{currency}}{{total}}</div>
+  </div>
+</div>
+
+{% if sender.bank %}
+<div class="bank-details">
+  <h3>Payment Details</h3>
+  {% if sender.bank.name %}<p><strong>Bank:</strong> {{sender.bank.name}}</p>{% endif %}
+  {% if sender.bank.routing %}<p><strong>Routing:</strong> {{sender.bank.routing}}</p>{% endif %}
+  {% if sender.bank.account %}<p><strong>Account:</strong> {{sender.bank.account}}</p>{% endif %}
+  {% if sender.bank.iban %}<p><strong>IBAN:</strong> {{sender.bank.iban}}</p>{% endif %}
+  {% if sender.bank.swift %}<p><strong>SWIFT:</strong> {{sender.bank.swift}}</p>{% endif %}
+</div>
+{% endif %}
+
+</body>
+</html>
