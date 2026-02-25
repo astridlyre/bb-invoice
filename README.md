@@ -150,3 +150,7 @@ Generated files are placed in `./output/` by default:
 
 - `invoice-INV-2026-0224.html` — the HTML invoice
 - `invoice-INV-2026-0224.pdf` — the PDF (when `--pdf` is used)
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
