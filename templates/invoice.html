@@ -26,6 +26,18 @@
     margin-bottom: 56px;
   }
 
+  .logo {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .logo svg {
+    height: 32px;
+    width: 32px;
+  }
+
   .header h1 {
     font-size: 32px;
     font-weight: 600;
@@ -176,7 +188,34 @@
 <body>
 
 <div class="header">
-  <h1>Invoice</h1>
+  <div class="logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 290" width="400" height="290">
+        <g transform="translate(16, 5)">
+          <rect x="0" y="0" width="48" height="275" fill="currentColor"/>
+          <polygon points="64,138 137,174 64,236" fill="currentColor"/>
+        </g>
+        <g transform="translate(142, 5)">
+          <path fill-rule="evenodd" d="
+            M 36,0
+            L 180,0
+            L 216,36
+            L 216,100
+            L 180,136
+            L 36,136
+            L 0,100
+            L 0,36
+            Z
+            M 48,48
+            L 168,48
+            L 168,88
+            L 48,88
+            Z
+          " fill="currentColor"/>
+          <polygon points="168,88 216,88 126,280 78,280" fill="currentColor"/>
+        </g>
+      </svg>
+    <h1>&middot; Invoice</h1>
+  </div>
   <div class="invoice-meta">
     <p class="invoice-number">{{invoice-number}}</p>
     <div class="dates">
