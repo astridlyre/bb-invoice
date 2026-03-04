@@ -8,15 +8,36 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  @page {
+    size: letter;
+    margin: 0;
+  }
+
   body {
     font-family: 'IBM Plex Sans', sans-serif;
     font-weight: 400;
     color: #1a1a1a;
     line-height: 1.6;
-    padding: 60px;
-    max-width: 800px;
-    margin: 0 auto;
     font-size: 14px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page-summary {
+    width: 8.5in;
+    min-height: 11in;
+    padding: 0.75in 0.85in;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page-detail {
+    width: 8.5in;
+    padding: 0.75in 0.85in 0.5in;
+    margin: 0 auto;
+    page-break-before: always;
+    break-before: page;
   }
 
   .header {
@@ -97,66 +118,63 @@
     color: #1a1a1a;
   }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 32px;
-  }
-
-  thead th {
-    padding: 12px 0;
-    text-align: left;
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: #9ca3af;
+  /* Summary totals on page 1 */
+  .summary-total {
+    margin-bottom: 48px;
+    border-top: 2px solid #e5e7eb;
     border-bottom: 2px solid #e5e7eb;
-  }
-
-  thead th.num { text-align: right; }
-
-  tbody td {
-    padding: 14px 0;
-    font-size: 14px;
-    color: #374151;
-    border-bottom: 1px solid #f3f4f6;
-  }
-
-  tbody td.num {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .total-row {
+    padding: 28px 0;
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 56px;
-    padding-top: 8px;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  .total-box {
-    text-align: right;
-  }
-
-  .total-box .label {
+  .summary-total .total-label {
     font-size: 11px;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     color: #9ca3af;
-    margin-bottom: 4px;
   }
 
-  .total-box .amount {
-    font-size: 28px;
+  .summary-total .total-amount {
+    font-size: 32px;
     font-weight: 600;
     color: #1a1a1a;
     letter-spacing: -0.5px;
   }
 
+  .summary-meta {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 48px;
+  }
+
+  .summary-meta .meta-block {
+    flex: 1;
+  }
+
+  .summary-meta .meta-block h3 {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+  }
+
+  .summary-meta .meta-block p {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.7;
+  }
+
+  .summary-meta .meta-block .value {
+    font-weight: 500;
+    color: #1a1a1a;
+  }
+
   .bank-details {
-    border-top: 2px solid #e5e7eb;
     padding-top: 24px;
   }
 
@@ -180,113 +198,251 @@
     color: #374151;
   }
 
+  .page-footer {
+    margin-top: auto;
+    padding-top: 24px;
+    font-size: 11px;
+    color: #9ca3af;
+    text-align: center;
+  }
+
+  thead { display: table-header-group; }
+
+  tbody tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 24px;
+  }
+
+  .detail-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .detail-header .ref {
+    font-size: 13px;
+    color: #6b7280;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 32px;
+  }
+
+  thead th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #9ca3af;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  thead th:first-child { padding-left: 0; }
+  thead th:last-child { padding-right: 0; }
+
+  thead th.num { text-align: right; }
+
+  tbody td {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+  }
+
+  tbody td:first-child { padding-left: 0; }
+  tbody td:last-child { padding-right: 0; }
+
+  tbody td.desc {
+    max-width: 320px;
+    line-height: 1.5;
+  }
+
+  .item-date {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-bottom: 2px;
+  }
+
+  tbody td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .detail-total {
+    border-top: 2px solid #e5e7eb;
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .detail-total .label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .detail-total .amount {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media screen {
+    body {
+      background: #f3f4f6;
+    }
+    .page-summary, .page-detail {
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      margin-bottom: 24px;
+    }
+  }
+
   @media print {
-    body { padding: 40px; }
+    body { background: white; }
+    .page-summary, .page-detail { box-shadow: none; }
   }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 290" width="400" height="290">
-        <g transform="translate(16, 5)">
-          <rect x="0" y="0" width="48" height="275" fill="currentColor"/>
-          <polygon points="64,138 137,174 64,236" fill="currentColor"/>
-        </g>
-        <g transform="translate(142, 5)">
-          <path fill-rule="evenodd" d="
-            M 36,0
-            L 180,0
-            L 216,36
-            L 216,100
-            L 180,136
-            L 36,136
-            L 0,100
-            L 0,36
-            Z
-            M 48,48
-            L 168,48
-            L 168,88
-            L 48,88
-            Z
-          " fill="currentColor"/>
-          <polygon points="168,88 216,88 126,280 78,280" fill="currentColor"/>
-        </g>
-      </svg>
-    <h1>&middot; Invoice</h1>
-  </div>
-  <div class="invoice-meta">
-    <p class="invoice-number">{{invoice-number}}</p>
-    <div class="dates">
-      <span>Issued {{date}}</span>
-      <span>Due {{due-date}}</span>
+<!-- PAGE 1: Summary -->
+<div class="page page-summary">
+
+  <div class="header">
+    <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 290" width="400" height="290">
+          <g transform="translate(16, 5)">
+            <rect x="0" y="0" width="48" height="275" fill="currentColor"/>
+            <polygon points="64,138 137,174 64,236" fill="currentColor"/>
+          </g>
+          <g transform="translate(142, 5)">
+            <path fill-rule="evenodd" d="
+              M 36,0
+              L 180,0
+              L 216,36
+              L 216,100
+              L 180,136
+              L 36,136
+              L 0,100
+              L 0,36
+              Z
+              M 48,48
+              L 168,48
+              L 168,88
+              L 48,88
+              Z
+            " fill="currentColor"/>
+            <polygon points="168,88 216,88 126,280 78,280" fill="currentColor"/>
+          </g>
+        </svg>
+      <h1>&middot; Invoice</h1>
+    </div>
+    <div class="invoice-meta">
+      <p class="invoice-number">{{invoice-number}}</p>
+      <div class="dates">
+        <span>Issued {{date}}</span>
+        <span>Due {{due-date}}</span>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="parties">
-  <div class="party">
-    <h3>From</h3>
-    <p class="name">{{sender.name}}</p>
-    {% if sender.company %}<p>{{sender.company}}</p>{% endif %}
-    {% if sender.address.street %}<p>{{sender.address.street}}</p>{% endif %}
-    {% if sender.address.city %}<p>{{sender.address.city}}{% if sender.address.state %}, {{sender.address.state}}{% endif %} {{sender.address.zip}}</p>{% endif %}
-    {% if sender.address.country %}<p>{{sender.address.country}}</p>{% endif %}
-    {% if sender.email %}<p>{{sender.email}}</p>{% endif %}
-    {% if sender.phone %}<p>{{sender.phone}}</p>{% endif %}
+  <div class="parties">
+    <div class="party">
+      <h3>From</h3>
+      <p class="name">{{sender.name}}</p>
+      {% if sender.company %}<p>{{sender.company}}</p>{% endif %}
+      {% if sender.address.street %}<p>{{sender.address.street}}</p>{% endif %}
+      {% if sender.address.city %}<p>{{sender.address.city}}{% if sender.address.state %}, {{sender.address.state}}{% endif %} {{sender.address.zip}}</p>{% endif %}
+      {% if sender.address.country %}<p>{{sender.address.country}}</p>{% endif %}
+      {% if sender.email %}<p>{{sender.email}}</p>{% endif %}
+      {% if sender.phone %}<p>{{sender.phone}}</p>{% endif %}
+    </div>
+    <div class="party">
+      <h3>Bill To</h3>
+      <p class="name">{{client.name}}</p>
+      {% if client.company %}<p>{{client.company}}</p>{% endif %}
+      {% if client.address.street %}<p>{{client.address.street}}</p>{% endif %}
+      {% if client.address.city %}<p>{{client.address.city}}{% if client.address.state %}, {{client.address.state}}{% endif %} {{client.address.zip}}</p>{% endif %}
+      {% if client.address.country %}<p>{{client.address.country}}</p>{% endif %}
+      {% if client.address %}<p>{{client.address}}</p>{% endif %}
+      {% if client.email %}<p>{{client.email}}</p>{% endif %}
+      {% if client.phone %}<p>{{client.phone}}</p>{% endif %}
+    </div>
   </div>
-  <div class="party">
-    <h3>Bill To</h3>
-    <p class="name">{{client.name}}</p>
-    {% if client.company %}<p>{{client.company}}</p>{% endif %}
-    {% if client.address.street %}<p>{{client.address.street}}</p>{% endif %}
-    {% if client.address.city %}<p>{{client.address.city}}{% if client.address.state %}, {{client.address.state}}{% endif %} {{client.address.zip}}</p>{% endif %}
-    {% if client.address.country %}<p>{{client.address.country}}</p>{% endif %}
-    {% if client.address %}<p>{{client.address}}</p>{% endif %}
-    {% if client.email %}<p>{{client.email}}</p>{% endif %}
-    {% if client.phone %}<p>{{client.phone}}</p>{% endif %}
+
+  <div class="summary-total">
+    <span class="total-label">Total Due</span>
+    <span class="total-amount">{{currency}}{{total}}</span>
   </div>
-</div>
 
-<table>
-  <thead>
-    <tr>
-      <th>Description</th>
-      <th class="num">Qty</th>
-      <th class="num">Rate</th>
-      <th class="num">Amount</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for item in services %}
-    <tr>
-      <td>{{item.description}}</td>
-      <td class="num">{{item.quantity}}</td>
-      <td class="num">{{currency}}{{item.amount}}</td>
-      <td class="num">{{currency}}{{item.line-total}}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+  {% if sender.bank %}
+  <div class="bank-details">
+    <h3>Payment Details</h3>
+    {% if sender.bank.name %}<p><strong>Bank:</strong> {{sender.bank.name}}</p>{% endif %}
+    {% if sender.bank.account %}<p><strong>Account:</strong> {{sender.bank.account}}</p>{% endif %}
+    {% if sender.bank.routing %}<p><strong>Routing:</strong> {{sender.bank.routing}}</p>{% endif %}
+    {% if all sender.bank.routing sender.bank.type %}<p><strong>Account Type:</strong> {{sender.bank.type}}</p>{% endif %}
+    {% if sender.bank.iban %}<p><strong>IBAN:</strong> {{sender.bank.iban}}</p>{% endif %}
+    {% if sender.bank.swift %}<p><strong>SWIFT:</strong> {{sender.bank.swift}}</p>{% endif %}
+    {% if all sender.bank.swift sender.bank.address %}<p><strong>Address:</strong> {{sender.bank.address}}</p>{% endif %}
+  </div>
+  {% endif %}
 
-<div class="total-row">
-  <div class="total-box">
-    <div class="label">Total Due</div>
-    <div class="amount">{{currency}}{{total}}</div>
+  <div class="page-footer">
+    {{invoice-number}}
   </div>
 </div>
 
-{% if sender.bank %}
-<div class="bank-details">
-  <h3>Payment Details</h3>
-  {% if sender.bank.name %}<p><strong>Bank:</strong> {{sender.bank.name}}</p>{% endif %}
-  {% if sender.bank.routing %}<p><strong>Routing:</strong> {{sender.bank.routing}}</p>{% endif %}
-  {% if sender.bank.account %}<p><strong>Account:</strong> {{sender.bank.account}}</p>{% endif %}
-  {% if sender.bank.iban %}<p><strong>IBAN:</strong> {{sender.bank.iban}}</p>{% endif %}
-  {% if sender.bank.swift %}<p><strong>SWIFT:</strong> {{sender.bank.swift}}</p>{% endif %}
+<div class="page-detail">
+
+  <div class="detail-header">
+    <h2>Details</h2>
+    <span class="ref">{{invoice-number}}</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th class="num">Hours</th>
+        <th class="num">Rate</th>
+        <th class="num">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in services %}
+      <tr>
+        <td class="desc">{% if item.date %}<div class="item-date">{{item.date}}</div>{% endif %}{{item.description}}</td>
+        <td class="num">{{item.quantity}}</td>
+        <td class="num">{{currency}}{{item.amount}}</td>
+        <td class="num">{{currency}}{{item.line-total}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="detail-total">
+    <span class="label">Total</span>
+    <span class="amount">{{currency}}{{total}}</span>
+  </div>
+
 </div>
-{% endif %}
 
 </body>
 </html>

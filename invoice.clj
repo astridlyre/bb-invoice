@@ -4,9 +4,11 @@
          '[selmer.parser :as selmer]
          '[cheshire.core :as json]
          '[clojure.edn :as edn]
+         '[clojure.data.csv :as csv]
          '[babashka.process :as proc]
          '[babashka.fs :as fs]
          '[clojure.string :as str])
+
 
 ;; --- CLI spec ---
 
@@ -18,10 +20,13 @@
    :client-company {:desc "Client company (inline)"}
    :client-email   {:desc "Client email (inline)"}
    :client-address {:desc "Client address (single string, inline)"}
-   :services    {:desc "Services file (required, edn or json)"}
+   :services    {:desc "Services file (required, edn/json/csv)"}
+   :client-rate {:desc "Hourly rate for client (overrides client file :rate)"
+                 :coerce :double}
+   :client-currency {:desc "Currency symbol for client (overrides client file :currency)"}
    :invoice-number {:desc "Invoice number (default: INV-YYYY-MMDD)"}
    :date        {:desc "Invoice date (default: today)"}
-   :due-date    {:desc "Due date (default: 30 days from date)"}
+   :due-date    {:desc "Due date (default: 15 days from date)"}
    :output      {:desc "Output HTML filename (default: invoice-<number>.html)"}
    :output-dir  {:desc "Output directory (default: ./output)"
                  :default "./output"}
@@ -33,9 +38,11 @@
    :help        {:desc "Show help"
                  :coerce :boolean}})
 
+
 ;; --- Help ---
 
-(defn print-help []
+(defn print-help
+  []
   (println "Usage: bb invoice.clj [options]")
   (println)
   (println "Options:")
@@ -46,19 +53,49 @@
       (when default (print (str " (default: " default ")")))
       (println))))
 
+
 ;; --- File loading ---
 
-(defn load-data-file [path]
+(defn parse-hours
+  [s]
+  (Double/parseDouble (str/replace s #"h$" "")))
+
+
+(defn account-label
+  [account]
+  (let [type (last (str/split (str/replace account #"[()]" "") #":"))]
+    (str/capitalize type)))
+
+
+(defn parse-csv-services
+  [content]
+  (let [rows    (csv/read-csv content)
+        headers (mapv keyword (first rows))
+        records (map #(zipmap headers %) (rest rows))
+        grouped (group-by (juxt :date :account) records)]
+    (mapv (fn [[[date account] entries]]
+            {:description (str (account-label account) ": "
+                               (str/join ", " (map :description entries)))
+             :date        date
+             :hours       (reduce + 0.0 (map #(parse-hours (:amount %)) entries))})
+          (sort-by key grouped))))
+
+
+(defn load-data-file
+  [path]
   (let [content (slurp path)
         ext     (str/lower-case (str (fs/extension path)))]
     (case ext
+      "csv"  (parse-csv-services content)
       "json" (json/parse-string content true)
       "edn"  (edn/read-string content)
       (edn/read-string content))))
 
+
 ;; --- Contact resolution ---
 
-(defn resolve-client [opts]
+(defn resolve-client
+  [opts]
   (cond
     (:client opts)
     (load-data-file (:client opts))
@@ -73,46 +110,63 @@
     (do (println "Error: must provide --client or --client-name")
         (System/exit 1))))
 
+
 ;; --- Date helpers ---
 
-(defn today []
+(defn today
+  []
   (str (java.time.LocalDate/now)))
 
-(defn plus-days [date-str days]
+
+(defn plus-days
+  [date-str days]
   (str (.plusDays (java.time.LocalDate/parse date-str) days)))
 
-(defn default-invoice-number [date-str]
+
+(defn default-invoice-number
+  [date-str]
   (let [d (java.time.LocalDate/parse date-str)]
     (format "INV-%d-%02d%02d" (.getYear d) (.getMonthValue d) (.getDayOfMonth d))))
 
+
 ;; --- Invoice computation ---
 
-(defn compute-services [services]
+(defn compute-services
+  [services]
   (mapv (fn [s]
           (assoc s
                  :amount   (format "%.2f" (double (:amount s)))
                  :line-total (format "%.2f" (* (double (:quantity s)) (double (:amount s))))))
         services))
 
-(defn compute-total [services]
+
+(defn compute-total
+  [services]
   (reduce + 0.0 (map #(* (double (:quantity %)) (double (:amount %))) services)))
+
 
 ;; --- HTML generation ---
 
-(defn generate-html [data]
+(defn generate-html
+  [data]
   (let [script-dir (str (fs/parent (fs/absolutize *file*)))
         template   (slurp (str script-dir "/templates/invoice.html"))]
     (selmer/render template data)))
+
 
 ;; --- PDF generation ---
 
 (def chrome-candidates
   ["chromium" "chromium-browser" "google-chrome" "google-chrome-stable"])
 
-(defn find-chrome []
+
+(defn find-chrome
+  []
   (first (filter #(some-> (fs/which %) str) chrome-candidates)))
 
-(defn generate-pdf [html-path pdf-path]
+
+(defn generate-pdf
+  [html-path pdf-path]
   (if-let [chrome (find-chrome)]
     (let [abs-html (str (fs/absolutize html-path))
           result   (proc/sh [chrome
@@ -131,24 +185,30 @@
         (println "Tried:" (str/join ", " chrome-candidates))
         (System/exit 1))))
 
+
 ;; --- hledger entry ---
 
-(defn format-hledger-entry [{:keys [date client-name invoice-number currency total]}]
+(defn format-hledger-entry
+  [{:keys [date client-name invoice-number currency total]}]
   (let [amount-str (format "%s%.2f" currency total)]
     (str "\n"
          date " * " client-name " | Invoice #" invoice-number "\n"
          "    assets:receivable    " amount-str "\n"
          "    revenue:services\n")))
 
-(defn output-hledger [dest entry]
+
+(defn output-hledger
+  [dest entry]
   (if (or (= dest "-") (= dest true))
     (print entry)
     (do (spit dest entry :append true)
         (println "hledger entry appended to:" dest))))
 
+
 ;; --- Main ---
 
-(defn -main [args]
+(defn -main
+  [args]
   (let [opts (cli/parse-opts args {:spec cli-spec
                                    :error-fn (fn [{:keys [msg]}]
                                                (println "Error:" msg)
@@ -164,16 +224,29 @@
       (System/exit 1))
 
     (let [date           (or (:date opts) (today))
-          due-date       (or (:due-date opts) (plus-days date 30))
+          due-date       (or (:due-date opts) (plus-days date 15))
           invoice-number (or (:invoice-number opts) (default-invoice-number date))
           sender         (when (fs/exists? (:me opts))
                            (load-data-file (:me opts)))
           client         (resolve-client opts)
+          rate           (or (:client-rate opts) (:rate client))
+          currency       (or (:client-currency opts) (:currency client) (:currency opts))
           services-raw   (load-data-file (:services opts))
+          csv?           (= "csv" (str/lower-case (str (fs/extension (:services opts)))))
+          services-raw   (if csv?
+                           (do (when-not rate
+                                 (println "Error: CSV services require --client-rate or :rate in client file")
+                                 (System/exit 1))
+                               (mapv (fn [s]
+                                       {:description (:description s)
+                                        :date        (:date s)
+                                        :quantity    (:hours s)
+                                        :amount      rate})
+                                     services-raw))
+                           services-raw)
           services       (compute-services services-raw)
           total          (compute-total services-raw)
           total-str      (format "%.2f" total)
-          currency       (:currency opts)
           output-dir     (:output-dir opts)
           _              (fs/create-dirs output-dir)
           output-html    (str (fs/path output-dir
@@ -206,5 +279,6 @@
                                                  :currency       currency
                                                  :total          total})]
           (output-hledger (:hledger opts) entry))))))
+
 
 (-main *command-line-args*)
