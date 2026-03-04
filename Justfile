@@ -1,2 +1,2 @@
-new client:
-	./invoice.clj --services services.edn --client ./clients/{{client}}.edn --pdf --hledger
+new client input:
+	./invoice.clj --services input.csv --client ./clients/{{client}}.edn --pdf --hledger --services {{input}}
