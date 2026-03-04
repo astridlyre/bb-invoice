@@ -1,15 +1,16 @@
 # hledger-invoice
 
-A [Babashka](https://babashka.org/)-based CLI tool for generating professional HTML/PDF invoices with optional [hledger](https://hledger.org/) journal entry integration.
+A [Babashka](https://babashka.org/)-based CLI tool for generating professional HTML/PDF invoices with optional [hledger](https://hledger.org/) journal entry integration. Designed for freelancers and consultants who track time in hledger and need polished invoices.
 
 ## Features
 
-- Professional HTML invoice generation with print-friendly styling
+- Professional two-page HTML invoice with print-optimized styling and custom fonts
+- CSV timesheet import — parses hledger CSV exports, groups entries by date and account, and computes hours automatically
 - PDF export via headless Chrome/Chromium
 - hledger double-entry journal output (file or stdout)
-- Multiple client profiles
-- Configurable currency, dates, and invoice numbering
-- Selmer-based HTML templating
+- Multiple client profiles with per-client hourly rates and currency
+- Configurable dates, invoice numbering, and currency
+- Selmer-based HTML templating with logo support
 
 ## Requirements
 
@@ -20,7 +21,11 @@ A [Babashka](https://babashka.org/)-based CLI tool for generating professional H
 ## Quick Start
 
 ```bash
-./invoice.clj --services services.edn --client ./clients/streamily.edn --pdf
+# From a CSV timesheet (hledger export)
+./invoice.clj --services input.csv --client ./clients/acme.edn --pdf
+
+# From an EDN services file
+./invoice.clj --services services.edn --client ./clients/acme.edn --pdf
 ```
 
 ## Configuration
@@ -46,27 +51,46 @@ Your personal/business details used on every invoice.
 
 All fields are optional except `:name`. Bank details (`:iban`, `:swift` also supported) are displayed in a payment details section on the invoice when present.
 
-### `services.edn` — Line Items
+### Services — Line Items
 
-A list of services/products to invoice. Each item requires `:description`, `:quantity`, and `:amount` (unit price).
+Services can be provided in three formats: **CSV**, **EDN**, or **JSON**.
+
+**CSV (hledger timesheet export):**
+
+The CSV format expects columns `date`, `description`, `account`, and `amount` (with `h` suffix for hours). Entries are grouped by date and account, and hours are multiplied by the client's hourly rate.
+
+```csv
+"txnidx","date","code","description","account","amount","total"
+"1","2026-03-02","","all hands meeting","(acme:meetings)","0.50h","0.50h"
+"2","2026-03-02","","tech requests","(acme:dev)","1.00h","1.00h"
+```
+
+When using CSV input, a client hourly rate is required (via `:rate` in the client file or `--client-rate`).
+
+**EDN:**
 
 ```edn
 [{:description "Web Development" :quantity 10 :amount 150.00}
  {:description "Consulting" :quantity 5 :amount 200.00}]
 ```
 
-This file can also be JSON format.
+**JSON:**
+
+```json
+[{"description": "Web Development", "quantity": 10, "amount": 150.00}]
+```
 
 ### `clients/*.edn` — Client Profiles
 
-Client files live in the `clients/` directory and use the same format as `me.edn`:
+Client files live in the `clients/` directory. They can include an hourly `:rate` and `:currency` for CSV-based invoicing:
 
 ```edn
-{:name "Alex Smith"
- :company "Streamily"
- :address {:street "456 Oak Ave" :city "Portland" :state "OR" :zip "97201"}
- :email "alex@streamily.com"}
+{:company "Acme"
+ :rate 56
+ :currency "$"}
 ```
+
+Standard contact fields (`:name`, `:address`, `:email`, etc.) are also supported, using the same format as `me.edn`.
 
 ### `templates/invoice.html` — Invoice Template
 
@@ -82,10 +106,12 @@ The HTML template uses [Selmer](https://github.com/yogthos/Selmer) syntax. Avail
 | `--client-company` | Client company (inline) | — |
 | `--client-email` | Client email (inline) | — |
 | `--client-address` | Client address (inline) | — |
-| `--services` | Services file (required) | — |
+| `--services` | Services file (required; `.csv`, `.edn`, or `.json`) | — |
+| `--client-rate` | Hourly rate (overrides client file `:rate`) | — |
+| `--client-currency` | Currency symbol (overrides client file `:currency`) | — |
 | `--invoice-number` | Invoice number | `INV-YYYY-MMDD` |
 | `--date` | Invoice date | today |
-| `--due-date` | Payment due date | 30 days from date |
+| `--due-date` | Payment due date | 15 days from date |
 | `--output` | Output HTML filename | `invoice-<number>.html` |
 | `--output-dir` | Output directory | `./output` |
 | `--pdf` | Generate PDF via headless Chrome | `false` |
@@ -95,16 +121,16 @@ The HTML template uses [Selmer](https://github.com/yogthos/Selmer) syntax. Avail
 
 ## Usage Examples
 
-**Generate an HTML invoice with a client file:**
+**Generate an invoice from a CSV timesheet:**
 
 ```bash
-./invoice.clj --services services.edn --client ./clients/streamily.edn
+./invoice.clj --services input.csv --client ./clients/acme.edn --pdf
 ```
 
-**Generate HTML + PDF:**
+**Generate an HTML invoice from EDN services:**
 
 ```bash
-./invoice.clj --services services.edn --client ./clients/streamily.edn --pdf
+./invoice.clj --services services.edn --client ./clients/acme.edn
 ```
 
 **Inline client details with custom dates:**
@@ -118,10 +144,16 @@ The HTML template uses [Selmer](https://github.com/yogthos/Selmer) syntax. Avail
   --due-date 2026-02-15
 ```
 
+**Override hourly rate on the command line:**
+
+```bash
+./invoice.clj --services input.csv --client ./clients/acme.edn --client-rate 75
+```
+
 **Append hledger journal entry to a file:**
 
 ```bash
-./invoice.clj --services services.edn --client ./clients/alex.edn --hledger journal.txt
+./invoice.clj --services input.csv --client ./clients/acme.edn --hledger journal.txt
 ```
 
 **Print hledger entry to stdout:**
@@ -133,23 +165,23 @@ The HTML template uses [Selmer](https://github.com/yogthos/Selmer) syntax. Avail
 The hledger entry format:
 
 ```
-2026-02-24 * Streamily | Invoice #INV-2026-0224
-    assets:receivable    $2500.00
+2026-03-04 * Acme | Invoice #INV-2026-0304
+    assets:receivable    $3640.00
     revenue:services
 ```
 
 **Using the Justfile:**
 
 ```bash
-just client streamily    # uses ./clients/streamily.edn
+just client acme input.csv
 ```
 
 ## Output
 
 Generated files are placed in `./output/` by default:
 
-- `invoice-INV-2026-0224.html` — the HTML invoice
-- `invoice-INV-2026-0224.pdf` — the PDF (when `--pdf` is used)
+- `invoice-INV-2026-0304.html` — the HTML invoice
+- `invoice-INV-2026-0304.pdf` — the PDF (when `--pdf` is used)
 
 ## License
 
