@@ -14,7 +14,7 @@
   }
 
   body {
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: 'Hanken Grotesk', sans-serif;
     font-weight: 400;
     color: #1a1a1a;
     line-height: 1.6;
@@ -48,6 +48,7 @@
   }
 
   .logo {
+    font-family: "Unica One", sans-serif;
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -129,7 +130,7 @@
     align-items: center;
   }
 
-  .summary-total .total-label {
+  .summary-total .total-label, .detail-total .total-label {
     font-size: 11px;
     font-weight: 500;
     text-transform: uppercase;
@@ -137,8 +138,8 @@
     color: #9ca3af;
   }
 
-  .summary-total .total-amount {
-    font-size: 32px;
+  .summary-total .total-amount, .detail-total .total-amount {
+    font-size: 24px;
     font-weight: 600;
     color: #1a1a1a;
     letter-spacing: -0.5px;
@@ -289,19 +290,6 @@
     align-items: center;
   }
 
-  .detail-total .label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1a1a1a;
-  }
-
-  .detail-total .amount {
-    font-size: 20px;
-    font-weight: 600;
-    color: #1a1a1a;
-    font-variant-numeric: tabular-nums;
-  }
-
   @media screen {
     body {
       background: #f3f4f6;
@@ -326,32 +314,7 @@
 
   <div class="header">
     <div class="logo">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 290" width="400" height="290">
-          <g transform="translate(16, 5)">
-            <rect x="0" y="0" width="48" height="275" fill="currentColor"/>
-            <polygon points="64,138 137,174 64,236" fill="currentColor"/>
-          </g>
-          <g transform="translate(142, 5)">
-            <path fill-rule="evenodd" d="
-              M 36,0
-              L 180,0
-              L 216,36
-              L 216,100
-              L 180,136
-              L 36,136
-              L 0,100
-              L 0,36
-              Z
-              M 48,48
-              L 168,48
-              L 168,88
-              L 48,88
-              Z
-            " fill="currentColor"/>
-            <polygon points="168,88 216,88 126,280 78,280" fill="currentColor"/>
-          </g>
-        </svg>
-      <h1>&middot; Invoice</h1>
+          <h1>{{sender.company}}</h1>
     </div>
     <div class="invoice-meta">
       <p class="invoice-number">{{invoice-number}}</p>
@@ -368,8 +331,8 @@
       <p class="name">{{sender.name}}</p>
       {% if sender.company %}<p>{{sender.company}}</p>{% endif %}
       {% if sender.address.street %}<p>{{sender.address.street}}</p>{% endif %}
-      {% if sender.address.city %}<p>{{sender.address.city}}{% if sender.address.state %}, {{sender.address.state}}{% endif %} {{sender.address.zip}}</p>{% endif %}
-      {% if sender.address.country %}<p>{{sender.address.country}}</p>{% endif %}
+      {% if sender.address.city %}<p>{{sender.address.city}}{% if sender.address.state %}, {{sender.address.state}}{% endif %} {{sender.address.zip}}{% if sender.address.country %}, {{sender.address.country}}{% endif %}</p>{% endif %}
+      
       {% if sender.email %}<p>{{sender.email}}</p>{% endif %}
       {% if sender.phone %}<p>{{sender.phone}}</p>{% endif %}
     </div>
@@ -438,8 +401,8 @@
   </table>
 
   <div class="detail-total">
-    <span class="label">Total</span>
-    <span class="amount">{{currency}}{{total}}</span>
+    <span class="total-label">Total</span>
+    <span class="total-amount">{{currency}}{{total}}</span>
   </div>
 
 </div>
