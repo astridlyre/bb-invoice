@@ -7,7 +7,7 @@
          '[clojure.data.csv :as csv]
          '[babashka.process :as proc]
          '[babashka.fs :as fs]
-         '[clojure.string :as str])
+         '[clojure.string :as s])
 
 
 ;; --- CLI spec ---
@@ -24,9 +24,9 @@
    :client-rate {:desc "Hourly rate for client (overrides client file :rate)"
                  :coerce :double}
    :client-currency {:desc "Currency symbol for client (overrides client file :currency)"}
-   :invoice-number {:desc "Invoice number (default: INV-YYYY-MMDD)"}
+   :invoice-number {:desc "Invoice number (default: <company>-YYYY-MM-DD)"}
    :date        {:desc "Invoice date (default: today)"}
-   :due-date    {:desc "Due date (default: 15 days from date)"}
+   :due-date    {:desc "Due date (default: 5 business days from date)"}
    :output      {:desc "Output HTML filename (default: invoice-<number>.html)"}
    :output-dir  {:desc "Output directory (default: ./output)"
                  :default "./output"}
@@ -58,13 +58,13 @@
 
 (defn parse-hours
   [s]
-  (Double/parseDouble (str/replace s #"h$" "")))
+  (Double/parseDouble (s/replace s #"h$" "")))
 
 
 (defn account-label
   [account]
-  (let [type (last (str/split (str/replace account #"[()]" "") #":"))]
-    (str/capitalize type)))
+  (let [type (last (s/split (s/replace account #"[()]" "") #":"))]
+    (s/capitalize type)))
 
 
 (defn parse-csv-services
@@ -75,7 +75,7 @@
         grouped (group-by (juxt :date :account) records)]
     (mapv (fn [[[date account] entries]]
             {:description (str (account-label account) ": "
-                               (str/join ", " (map :description entries)))
+                               (s/join ", " (map :description entries)))
              :date        date
              :hours       (reduce + 0.0 (map #(parse-hours (:amount %)) entries))})
           (sort-by key grouped))))
@@ -84,7 +84,7 @@
 (defn load-data-file
   [path]
   (let [content (slurp path)
-        ext     (str/lower-case (str (fs/extension path)))]
+        ext     (s/lower-case (str (fs/extension path)))]
     (case ext
       "csv"  (parse-csv-services content)
       "json" (json/parse-string content true)
@@ -123,10 +123,23 @@
   (str (.plusDays (java.time.LocalDate/parse date-str) days)))
 
 
+(defn plus-business-days
+  [date-str biz-days]
+  (loop [d   (java.time.LocalDate/parse date-str)
+         rem biz-days]
+    (if (zero? rem)
+      (str d)
+      (let [next (.plusDays d 1)
+            dow  (.getValue (.getDayOfWeek next))]
+        (if (<= dow 5)
+          (recur next (dec rem))
+          (recur next rem))))))
+
+
 (defn default-invoice-number
-  [date-str]
+  [date-str {:keys [company name] :or {name "client"}}]
   (let [d (java.time.LocalDate/parse date-str)]
-    (format "INV-%d-%02d%02d" (.getYear d) (.getMonthValue d) (.getDayOfMonth d))))
+    (str (if company company name) (format "-%d-%02d-%02d" (.getYear d) (.getMonthValue d) (.getDayOfMonth d)))))
 
 
 ;; --- Invoice computation ---
@@ -143,6 +156,11 @@
 (defn compute-total
   [services]
   (reduce + 0.0 (map #(* (double (:quantity %)) (double (:amount %))) services)))
+
+
+(defn compute-hours
+  [services]
+  (reduce + 0.0 (map :quantity services)))
 
 
 ;; --- HTML generation ---
@@ -182,7 +200,7 @@
             (println (:err result))
             (System/exit 1))))
     (do (println "Error: no Chrome/Chromium found on PATH")
-        (println "Tried:" (str/join ", " chrome-candidates))
+        (println "Tried:" (s/join ", " chrome-candidates))
         (System/exit 1))))
 
 
@@ -224,15 +242,15 @@
       (System/exit 1))
 
     (let [date           (or (:date opts) (today))
-          due-date       (or (:due-date opts) (plus-days date 15))
-          invoice-number (or (:invoice-number opts) (default-invoice-number date))
+          due-date       (or (:due-date opts) (plus-business-days date 5))
           sender         (when (fs/exists? (:me opts))
                            (load-data-file (:me opts)))
           client         (resolve-client opts)
+          invoice-number (or (:invoice-number opts) (default-invoice-number date client))
           rate           (or (:client-rate opts) (:rate client))
           currency       (or (:client-currency opts) (:currency client) (:currency opts))
           services-raw   (load-data-file (:services opts))
-          csv?           (= "csv" (str/lower-case (str (fs/extension (:services opts)))))
+          csv?           (= "csv" (s/lower-case (str (fs/extension (:services opts)))))
           services-raw   (if csv?
                            (do (when-not rate
                                  (println "Error: CSV services require --client-rate or :rate in client file")
@@ -246,11 +264,12 @@
                            services-raw)
           services       (compute-services services-raw)
           total          (compute-total services-raw)
+          total-hours    (compute-hours services-raw)
           total-str      (format "%.2f" total)
           output-dir     (:output-dir opts)
           _              (fs/create-dirs output-dir)
           output-html    (str (fs/path output-dir
-                                       (or (:output opts) (str "invoice-" invoice-number ".html"))))
+                                       (or (:output opts) (str invoice-number ".html"))))
           template-data  {:sender         (or sender {})
                           :client         client
                           :services       services
@@ -258,6 +277,7 @@
                           :date           date
                           :due-date       due-date
                           :total          total-str
+                          :total-hours total-hours
                           :currency       currency}
           html           (generate-html template-data)]
 
@@ -267,7 +287,7 @@
 
       ;; PDF
       (when (:pdf opts)
-        (let [pdf-path (str/replace output-html #"\.html$" ".pdf")]
+        (let [pdf-path (s/replace output-html #"\.html$" ".pdf")]
           (generate-pdf output-html pdf-path)))
 
       ;; hledger

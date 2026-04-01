@@ -127,7 +127,12 @@
     padding: 28px 0;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+  }
+
+  .total-group:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
   }
 
   .summary-total .total-label, .detail-total .total-label {
@@ -136,9 +141,10 @@
     text-transform: uppercase;
     letter-spacing: 1.5px;
     color: #9ca3af;
+    display: block;
   }
 
-  .summary-total .total-amount, .detail-total .total-amount {
+  .summary-total .total-amount, .detail-total .total-amount, .summary-total .total-hours, .detail-total .total-hours {
     font-size: 24px;
     font-weight: 600;
     color: #1a1a1a;
@@ -343,15 +349,20 @@
       {% if client.address.street %}<p>{{client.address.street}}</p>{% endif %}
       {% if client.address.city %}<p>{{client.address.city}}{% if client.address.state %}, {{client.address.state}}{% endif %} {{client.address.zip}}</p>{% endif %}
       {% if client.address.country %}<p>{{client.address.country}}</p>{% endif %}
-      {% if client.address %}<p>{{client.address}}</p>{% endif %}
       {% if client.email %}<p>{{client.email}}</p>{% endif %}
       {% if client.phone %}<p>{{client.phone}}</p>{% endif %}
     </div>
   </div>
 
   <div class="summary-total">
-    <span class="total-label">Total Due</span>
-    <span class="total-amount">{{currency}}{{total}}</span>
+    <div class="total-group">
+      <span class="total-label">Total Hours Billed</span>
+      <span class="total-hours">{{total-hours}}</span>
+    </div>
+    <div class="total-group">
+      <span class="total-label">Total Due</span>
+      <span class="total-amount">{{currency}}{{total}}</span>
+    </div>
   </div>
 
   {% if sender.bank %}
@@ -401,8 +412,14 @@
   </table>
 
   <div class="detail-total">
-    <span class="total-label">Total</span>
-    <span class="total-amount">{{currency}}{{total}}</span>
+    <div class="total-group">
+      <span class="total-label">Total Hours Billed</span>
+      <span class="total-hours">{{total-hours}}</span>
+    </div>
+    <div class="total-group">
+      <span class="total-label">Total Due</span>
+      <span class="total-amount">{{currency}}{{total}}</span>
+    </div>
   </div>
 
 </div>
