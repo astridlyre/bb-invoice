@@ -355,10 +355,10 @@
   </div>
 
   <div class="summary-total">
-    <div class="total-group">
+    {% if csv? %}<div class="total-group">
       <span class="total-label">Total Hours Billed</span>
       <span class="total-hours">{{total-hours}}</span>
-    </div>
+    </div>{% endif %}
     <div class="total-group">
       <span class="total-label">Total Due</span>
       <span class="total-amount">{{currency}}{{total}}</span>
@@ -394,9 +394,9 @@
     <thead>
       <tr>
         <th>Description</th>
-        <th class="num">Hours</th>
-        <th class="num">Rate</th>
-        <th class="num">Amount</th>
+            <th class="num">{% if csv? %}Hours{% else %}Quantity{% endif %}</th>
+            <th class="num">{% if csv? %}Rate{% else %}Amount{% endif %}</th>
+            <th class="num">{% if csv? %}Amount{% else %}Total{% endif %}</th>
       </tr>
     </thead>
     <tbody>
@@ -411,11 +411,34 @@
     </tbody>
   </table>
 
+  {% if expenses %}
+  <div class="detail-header" style="margin-top: 16px;">
+    <h2>Expenses</h2>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th class="num">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for expense in expenses %}
+      <tr>
+        <td class="desc">{{expense.description}}</td>
+        <td class="num">{{currency}}{{expense.amount-str}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
   <div class="detail-total">
-    <div class="total-group">
+    {% if csv? %}<div class="total-group">
       <span class="total-label">Total Hours Billed</span>
       <span class="total-hours">{{total-hours}}</span>
-    </div>
+    </div>{% endif %}
     <div class="total-group">
       <span class="total-label">Total Due</span>
       <span class="total-amount">{{currency}}{{total}}</span>

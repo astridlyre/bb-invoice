@@ -163,6 +163,18 @@
   (reduce + 0.0 (map :quantity services)))
 
 
+(defn compute-expenses
+  [expenses]
+  (mapv (fn [e]
+          (assoc e :amount-str (format "%.2f" (double (:amount e)))))
+        expenses))
+
+
+(defn compute-expenses-total
+  [expenses]
+  (reduce + 0.0 (map #(double (:amount %)) expenses)))
+
+
 ;; --- HTML generation ---
 
 (defn generate-html
@@ -263,8 +275,12 @@
                                      services-raw))
                            services-raw)
           services       (compute-services services-raw)
-          total          (compute-total services-raw)
+          services-total (compute-total services-raw)
           total-hours    (compute-hours services-raw)
+          expenses-raw   (or (:expenses client) [])
+          expenses       (compute-expenses expenses-raw)
+          expenses-total (compute-expenses-total expenses-raw)
+          total          (+ services-total expenses-total)
           total-str      (format "%.2f" total)
           output-dir     (:output-dir opts)
           _              (fs/create-dirs output-dir)
@@ -273,11 +289,13 @@
           template-data  {:sender         (or sender {})
                           :client         client
                           :services       services
+                          :expenses       expenses
+                          :csv?           csv?
                           :invoice-number invoice-number
                           :date           date
                           :due-date       due-date
                           :total          total-str
-                          :total-hours total-hours
+                          :total-hours    total-hours
                           :currency       currency}
           html           (generate-html template-data)]
 
